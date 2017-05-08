@@ -47,7 +47,8 @@ Submit on the 31th may to spark@behmo.com
 
 - Spark standard library: https://spark.apache.org/docs/latest/programming-guide.html#transformations
 - Classification with Spark: https://spark.apache.org/docs/latest/mllib-classification-regression.html
-- Multi-label classification evaluation: https://spark.apache.org/docs/latest/mllib-evaluation-metrics.html#multilabel-classification
+- Multi-label classification evaluation: https://spark.apache.org/docs/latest/mllib-evaluation-metrics.html
+
 """
 import os
 import sys
@@ -56,6 +57,7 @@ import itertools as iter
 import numpy as np
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.tree import RandomForest, RandomForestModel
+from pyspark.mllib.evaluation import MulticlassMetrics
 
 
 DATASET_ROOT = os.path.join(os.path.dirname(__file__), "..", "data", "oxford-IIIT-pet-dataset")
@@ -91,8 +93,8 @@ def main():
 
 
   ### grid search function ###
-  numTrees = [10, 12, 15]
-  maxDepth = [10, 12, 15]
+  numTrees = [2, 5, 10, 15, 20] #50, 100]   
+  maxDepth = [2, 5, 10]  # more than 10 leads to storage issues
 
   bestErr = 1
   bestParams = np.zeros(2)
@@ -127,10 +129,28 @@ def main():
   # evaluate model on test data
   predictions = bestModel.predict(testData.map(lambda s: s.features))
   labelsAndPredictions = testData.map(lambda s: s.label).zip(predictions)
+
   testErr = labelsAndPredictions.filter(lambda (v, p): v != p).count() / float(testData.count())
 
   print("Best parameters: numTree: {}, maxDepth: {}".format(bestParams[0], bestParams[1]))
   print('Test Error = ' + str(testErr))
+
+  # invert predictions and labels columns
+  predictionAndLabels = labelsAndPredictions.map(lambda (v, p): (p, v))
+  print (predictionAndLabels.collect()[1])
+
+  metrics = MulticlassMetrics(predictionAndLabels)
+
+  # overall statistics
+  #accuracy = metrics.accuracy()
+  precision = metrics.precision()
+  recall = metrics.recall()
+  f1Score = metrics.fMeasure()
+  print("Summary Stats")
+  #print("Accuracy =  %s" % accuracy)
+  print("Precision = %s" % precision)
+  print("Recall = %s" % recall)
+  print("F1 Score = %s" % f1Score)  
 
 pass
 
