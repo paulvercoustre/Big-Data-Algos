@@ -1,0 +1,1 @@
+INDEX VERSION 1.130+/Users/paulvercoustre/Documents/Education/Centrale_ESSEC/Big_Data_Algorithms_Plateforms/Big-Data-Algos/week2/.metadata/.plugins/org.eclipse.jdt.core
